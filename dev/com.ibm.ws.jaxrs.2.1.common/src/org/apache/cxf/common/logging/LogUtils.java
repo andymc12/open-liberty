@@ -23,8 +23,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -163,7 +161,7 @@ public final class LogUtils {
      */
     public static Logger getLogger(Class<?> cls) {
         //Liberty Change for CXF Begain
-        return createLogger(cls, null, cls.getName() + cls.getClassLoader());
+        return createLogger(cls, null, cls.getName() + getClassLoader(cls));
         //Liberty Change for CXF End
     }
 
@@ -176,7 +174,7 @@ public final class LogUtils {
      */
     public static Logger getLogger(Class<?> cls, String resourcename) {
         //Liberty Change for CXF Begain
-        return createLogger(cls, resourcename, cls.getName() + cls.getClassLoader());
+        return createLogger(cls, resourcename, cls.getName() + getClassLoader(cls));
         //Liberty Change for CXF End
     }
 
@@ -202,7 +200,7 @@ public final class LogUtils {
      */
     public static Logger getL7dLogger(Class<?> cls) {
         //Liberty Change for CXF Begain
-        return createLogger(cls, null, cls.getName() + cls.getClassLoader());
+        return createLogger(cls, null, cls.getName() + getClassLoader(cls));
         //Liberty Change for CXF End
     }
 
@@ -215,7 +213,7 @@ public final class LogUtils {
      */
     public static Logger getL7dLogger(Class<?> cls, String resourcename) {
         //Liberty Change for CXF Begain
-        return createLogger(cls, resourcename, cls.getName() + cls.getClassLoader());
+        return createLogger(cls, resourcename, cls.getName() + getClassLoader(cls));
         //Liberty Change for CXF End
     }
 
@@ -333,6 +331,7 @@ public final class LogUtils {
         final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+                @Override
                 public ClassLoader run() {
                     return Thread.currentThread().getContextClassLoader();
                 }
@@ -345,6 +344,7 @@ public final class LogUtils {
         final SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+                @Override
                 public ClassLoader run() {
                     return clazz.getClassLoader();
                 }

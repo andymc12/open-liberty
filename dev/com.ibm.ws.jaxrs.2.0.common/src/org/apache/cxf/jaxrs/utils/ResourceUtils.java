@@ -142,17 +142,21 @@ public final class ResourceUtils {
         return findPostConstructMethod(c, null);
     }
 
-    public static Method findPostConstructMethod(final Class<?> c, String name) {
-        if (Object.class == c || null == c) {
-            return null;
-        }
-        // Liberty change - wrap in doPriv
-        Method[] methods = AccessController.doPrivileged(new PrivilegedAction<Method[]>() {
+    private static Method[] getDeclaredMethods(final Class<?> c) {
+        return AccessController.doPrivileged(new PrivilegedAction<Method[]>() {
             @Override
             public Method[] run() {
                 return c.getDeclaredMethods();
             }
         });
+    }
+
+    public static Method findPostConstructMethod(final Class<?> c, String name) {
+        if (Object.class == c || null == c) {
+            return null;
+        }
+        // Liberty change - wrap in doPriv
+        Method[] methods = getDeclaredMethods(c);
         for (Method m : methods) {
             if (name != null) {
                 if (m.getName().equals(name)) {
@@ -183,7 +187,7 @@ public final class ResourceUtils {
         if (Object.class == c || null == c) {
             return null;
         }
-        for (Method m : c.getDeclaredMethods()) {
+        for (Method m : getDeclaredMethods(c)) {
             if (name != null) {
                 if (m.getName().equals(name)) {
                     return ReflectionUtil.setAccessible(m);
@@ -221,7 +225,7 @@ public final class ResourceUtils {
         if (model == null) {
             throw new RuntimeException("Resource class " + sClass.getName() + " has no model info");
         }
-        ClassResourceInfo cri = 
+        ClassResourceInfo cri =
             new ClassResourceInfo(sClass, sClass, isRoot, enableStatic, true,
                                   model.getConsumes(), model.getProduces(), bus);
         URITemplate t = URITemplate.createTemplate(model.getPath());
@@ -249,7 +253,7 @@ public final class ResourceUtils {
             if (actualMethod == null) {
                 continue;
             }
-            OperationResourceInfo ori = 
+            OperationResourceInfo ori =
                 new OperationResourceInfo(actualMethod, cri, URITemplate.createTemplate(op.getPath()),
                                           op.getVerb(), op.getConsumes(), op.getProduces(),
                                           op.getParameters(),
@@ -257,7 +261,7 @@ public final class ResourceUtils {
             String rClassName = actualMethod.getReturnType().getName();
             if (op.getVerb() == null) {
                 if (resources.containsKey(rClassName)) {
-                    ClassResourceInfo subCri = rClassName.equals(model.getName()) ? cri 
+                    ClassResourceInfo subCri = rClassName.equals(model.getName()) ? cri
                         : createServiceClassResourceInfo(resources, resources.get(rClassName),
                                                                                                                          actualMethod.getReturnType(), false, enableStatic, bus);
                     if (subCri != null) {
@@ -353,8 +357,8 @@ public final class ResourceUtils {
 
     private static void reportInvalidResourceMethod(Method m, String messageId, Level logLevel) {
         if (LOG.isLoggable(logLevel)) { //Liberty change - CXF-7121
-            LOG.log(logLevel, new org.apache.cxf.common.i18n.Message(messageId, 
-                                                             BUNDLE, 
+            LOG.log(logLevel, new org.apache.cxf.common.i18n.Message(messageId,
+                                                             BUNDLE,
                                                              m.getDeclaringClass().getName(),
                                                              m.getName()).toString());
         }
@@ -536,8 +540,8 @@ public final class ResourceUtils {
 
     private static boolean checkMethodDispatcher(ClassResourceInfo cr) {
         if (cr.getMethodDispatcher().getOperationResourceInfos().isEmpty()) {
-            LOG.warning(new org.apache.cxf.common.i18n.Message("NO_RESOURCE_OP_EXC", 
-                                                               BUNDLE, 
+            LOG.warning(new org.apache.cxf.common.i18n.Message("NO_RESOURCE_OP_EXC",
+                                                               BUNDLE,
                                                                cr.getServiceClass().getName()).toString());
             return false;
         }
@@ -647,8 +651,8 @@ public final class ResourceUtils {
 
     public static List<UserResource> getResourcesFromElement(Element modelEl) {
         List<UserResource> resources = new ArrayList<UserResource>();
-        List<Element> resourceEls = 
-            DOMUtils.findAllElementsByTagNameNS(modelEl, 
+        List<Element> resourceEls =
+            DOMUtils.findAllElementsByTagNameNS(modelEl,
                                                                         "http://cxf.apache.org/jaxrs", "resource");
         for (Element e : resourceEls) {
             resources.add(getResourceFromElement(e));
@@ -695,7 +699,7 @@ public final class ResourceUtils {
             }
             Type type = method.getGenericReturnType();
             if (jaxbOnly) {
-                checkJaxbType(resource.getServiceClass(), cls, realReturnType == Response.class || ori.isAsync() 
+                checkJaxbType(resource.getServiceClass(), cls, realReturnType == Response.class || ori.isAsync()
                     ? cls : type, types, method.getAnnotations(), jaxbWriter);
             } else {
                 types.getAllTypes().put(cls, type);
@@ -791,8 +795,8 @@ public final class ResourceUtils {
         resource.setPath(e.getAttribute("path"));
         resource.setConsumes(e.getAttribute("consumes"));
         resource.setProduces(e.getAttribute("produces"));
-        List<Element> operEls = 
-            DOMUtils.findAllElementsByTagNameNS(e, 
+        List<Element> operEls =
+            DOMUtils.findAllElementsByTagNameNS(e,
                                                                     "http://cxf.apache.org/jaxrs", "operation");
         List<UserOperation> opers = new ArrayList<UserOperation>(operEls.size());
         for (Element operEl : operEls) {
@@ -810,8 +814,8 @@ public final class ResourceUtils {
         op.setOneway(Boolean.parseBoolean(e.getAttribute("oneway")));
         op.setConsumes(e.getAttribute("consumes"));
         op.setProduces(e.getAttribute("produces"));
-        List<Element> paramEls = 
-            DOMUtils.findAllElementsByTagNameNS(e, 
+        List<Element> paramEls =
+            DOMUtils.findAllElementsByTagNameNS(e,
                                                                      "http://cxf.apache.org/jaxrs", "param");
         List<Parameter> params = new ArrayList<Parameter>(paramEls.size());
         for (int i = 0; i < paramEls.size(); i++) {
@@ -850,7 +854,7 @@ public final class ResourceUtils {
         Annotation[][] anns = c.getParameterAnnotations();
         Type[] genericTypes = c.getGenericParameterTypes();
         @SuppressWarnings("unchecked")
-        MultivaluedMap<String, String> templateValues = 
+        MultivaluedMap<String, String> templateValues =
             (MultivaluedMap<String, String>)m.get(URITemplate.TEMPLATE_PARAMETERS);
         Object[] values = new Object[params.length];
         for (int i = 0; i < params.length; i++) {
@@ -877,9 +881,9 @@ public final class ResourceUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static JAXRSServerFactoryBean createApplication(Application app, 
+    public static JAXRSServerFactoryBean createApplication(Application app,
                                                            boolean ignoreAppPath,
-                                                           boolean staticSubresourceResolution, 
+                                                           boolean staticSubresourceResolution,
                                                            boolean useSingletonResourceProvider,
                                                            Bus bus) {
 
