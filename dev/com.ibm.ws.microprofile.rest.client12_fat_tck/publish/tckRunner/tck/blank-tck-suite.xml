@@ -12,8 +12,7 @@
     configfailurepolicy="continue">
     <test name="microprofile-rest.client-1.2-tck-all">
         <packages>
-            <package name="org.eclipse.microprofile.rest.client.tck.*">
-            </package>
+            <package name="org.eclipse.microprofile.rest.client.tck.*"></package>
         </packages>
     </test>
 </suite>

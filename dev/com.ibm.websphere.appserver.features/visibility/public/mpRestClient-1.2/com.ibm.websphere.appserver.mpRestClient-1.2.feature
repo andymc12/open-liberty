@@ -16,7 +16,8 @@ Subsystem-Name: MicroProfile Rest Client 1.2
  com.ibm.websphere.appserver.javax.cdi-2.0, \
  com.ibm.websphere.appserver.javax.annotation-1.3, \
  com.ibm.websphere.appserver.jaxrsClient-2.1, \
- com.ibm.websphere.appserver.jsonp-1.1
+ com.ibm.websphere.appserver.jsonp-1.1, \
+ com.ibm.websphere.appserver.mpConfig-1.3
 -bundles=com.ibm.ws.require.java8, \
   com.ibm.ws.org.apache.cxf.cxf.rt.rs.mp.client.3.3; apiJar=false; location:="lib/"
 kind=noship
