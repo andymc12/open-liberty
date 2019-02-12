@@ -174,12 +174,14 @@ public class ClientProxyImpl extends AbstractClient implements
         }
     }
 
+    @FFDCIgnore({PrivilegedActionException.class})
     private static Object invokeDefaultMethod(Class<?> declaringClass, Object o, Method m, Object[] params)
         throws Throwable {
 
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
                 @Override
+                @FFDCIgnore({NoSuchFieldException.class})
                 public Object run() throws Exception {
                     try {
                         final MethodHandles.Lookup lookup = MethodHandles
@@ -187,7 +189,15 @@ public class ClientProxyImpl extends AbstractClient implements
                                 .in(declaringClass);
                         
                         // force private access so unreflectSpecial can invoke the interface's default method
-                        final Field f = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
+                        // Liberty change start - handle IBM JDK
+                        Field f;
+                        try {
+                            f = MethodHandles.Lookup.class.getDeclaredField("allowedModes");
+                        } catch (NoSuchFieldException nsfe) {
+                            // IBM JDK uses a different field name
+                            f = MethodHandles.Lookup.class.getDeclaredField("accessMode");
+                        }
+                        // Liberty change end
                         final int modifiers = f.getModifiers();
                         if (Modifier.isFinal(modifiers)) {
                             final Field modifiersField = Field.class.getDeclaredField("modifiers");
